@@ -1,37 +1,100 @@
-function validateEmail(email) {
-    if (!email) return { ok: false, msg: 'Email is required.' };
-    email = email.trim();
-    if (email.length > 254) return { ok: false, msg: 'Email is too long (max 254 characters).' };
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Validator</title>
+    <style>
+        body { font-family: system-ui, Arial; padding: 1rem; background: #f7f7f8; color: #111; }
+        .container { max-width: 520px; margin: 2rem auto; background: #fff; padding: 1.25rem; border-radius: 8px; box-shadow: 0 4px 14px rgba(20,20,30,0.05); }
+        .form-group { margin-bottom: 0.75rem; }
+        input[type="email"] { width: 100%; padding: 0.5rem; border: 1px solid #cfd6dd; border-radius: 6px; font-size: 1rem; }
+        button { padding: 0.5rem 0.75rem; border-radius: 6px; border: none; background: #0366d6; color: white; cursor: pointer; }
+        #result { margin-top: 0.75rem; min-height: 1.25rem; }
+        .ok { color: #056d38; }
+        .err { color: #a10a0a; }
+        .hint { font-size: 0.9rem; color: #4b5563; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Email Validator</h1>
+        <form id="emailForm" novalidate>
+            <div class="form-group">
+                <label for="email">Enter your email:</label>
+                <input type="email" id="email" name="email" placeholder="example@domain.com" autocomplete="email" required>
+            </div>
+            <button type="submit">Validate Email</button>
+        </form>
+        <div id="result" role="status" aria-live="polite"></div>
+        <p class="hint">Validation includes syntax checks, max lengths, and domain label rules (client-side only).</p>
+        <footer>
+            <p style="font-size: 0.8rem; color: #6b7280;">&copy; 2024 Email Validator. All rights reserved.</p>
+        </footer>
+    </div>
 
-    const atCount = (email.match(/@/g) || []).length;
-    if (atCount !== 1) return { ok: false, msg: 'Email must contain a single "@" symbol.' };
+    <script>
+        // GitHub Copilot
+        (function () {
+            const form = document.getElementById('emailForm');
+            const input = document.getElementById('email');
+            const result = document.getElementById('result');
 
-    const [local, domain] = email.split('@');
-    if (!local) return { ok: false, msg: 'Local part is empty.' };
-    if (!domain) return { ok: false, msg: 'Domain part is empty.' };
-    if (local.length > 64) return { ok: false, msg: 'Local part is too long (max 64 characters).' };
+            // Robust-ish RFC-like pattern for common valid emails (ASCII). Accepts dot-atoms and hyphenated domains.
+            const emailPattern = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*$/;
 
-    // Check if domain has at least one dot
-    if (!domain.includes('.')) return { ok: false, msg: 'Domain must contain at least one dot.' };
+            function show(message, ok) {
+                result.textContent = message;
+                result.className = ok ? 'ok' : 'err';
+            }
 
-    // Quick syntax check via regex
-    if (!emailPattern.test(email)) {
-        // Allow quoted local parts: "..."@domain
-        const quotedLocal = /^"(?:\\.|[^"\\])+"@[^\s@]+$/.test(email);
-        if (!quotedLocal) return { ok: false, msg: 'Email syntax is invalid.' };
-    }
+            function validateEmail(email) {
+                if (!email) return { ok: false, msg: 'Email is required.' };
+                email = email.trim();
+                if (email.length > 254) return { ok: false, msg: 'Email is too long (max 254 characters).' };
 
-    // Domain checks: labels length and characters, TLD not numeric-only
-    const labels = domain.split('.');
-    if (labels.length < 2) return { ok: false, msg: 'Domain must have at least two parts.' };
-    if (labels.some(l => l.length === 0)) return { ok: false, msg: 'Domain contains empty label (consecutive dots or leading/trailing dot).' };
-    for (const label of labels) {
-        if (label.length > 63) return { ok: false, msg: 'A domain label is too long (max 63 characters).' };
-        if (!/^[A-Za-z0-9-]+$/.test(label)) return { ok: false, msg: 'Domain labels may contain only letters, digits and hyphens.' };
-        if (/^-|-$/.test(label)) return { ok: false, msg: 'Domain labels must not start or end with a hyphen.' };
-    }
-    const tld = labels[labels.length - 1];
-    if (/^\d+$/.test(tld)) return { ok: false, msg: 'Top-level domain must not be all numeric.' };
+                const atCount = (email.match(/@/g) || []).length;
+                if (atCount !== 1) return { ok: false, msg: 'Email must contain a single "@" symbol.' };
 
-    return { ok: true, msg: 'Email looks valid (syntactically).' };
-}
+                const [local, domain] = email.split('@');
+                if (!local) return { ok: false, msg: 'Local part is empty.' };
+                if (!domain) return { ok: false, msg: 'Domain part is empty.' };
+                if (local.length > 64) return { ok: false, msg: 'Local part is too long (max 64 characters).' };
+
+                // Quick syntax check via regex
+                if (!emailPattern.test(email)) {
+                    // Allow quoted local parts: "..."@domain
+                    const quotedLocal = /^"(?:\\.|[^"\\])+"@[^\s@]+$/.test(email);
+                    if (!quotedLocal) return { ok: false, msg: 'Email syntax is invalid.' };
+                }
+
+                // Domain checks: labels length and characters, TLD not numeric-only
+                const labels = domain.split('.');
+                if (labels.some(l => l.length === 0)) return { ok: false, msg: 'Domain contains empty label (consecutive dots or leading/trailing dot).' };
+                for (const label of labels) {
+                    if (label.length > 63) return { ok: false, msg: 'A domain label is too long (max 63 characters).' };
+                    if (!/^[A-Za-z0-9-]+$/.test(label)) return { ok: false, msg: 'Domain labels may contain only letters, digits and hyphens.' };
+                    if (/^-|-$/.test(label)) return { ok: false, msg: 'Domain labels must not start or end with a hyphen.' };
+                }
+                const tld = labels[labels.length - 1];
+                if (/^\d+$/.test(tld)) return { ok: false, msg: 'Top-level domain must not be all numeric.' };
+
+                // If you need domain existence / MX checks, perform a server-side query — not possible reliably from the browser.
+                return { ok: true, msg: 'Email looks valid (syntactically).' };
+            }
+
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const value = input.value || '';
+                const res = validateEmail(value);
+                show(res.msg, res.ok);
+            });
+
+            input.addEventListener('input', function () {
+                result.textContent = '';
+                result.className = '';
+            });
+        })();
+    </script>
+</body>
+</html>
